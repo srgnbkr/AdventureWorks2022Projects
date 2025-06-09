@@ -28,11 +28,6 @@ Order By OrderCount Desc
 
 
 
-
-
-
-
-
 --⚙️ CASE 2: Stokta Bitmeye Yakın Ürünler
 --Kategori: Üretim / Stok
 --Senaryo: Üretim yöneticisi, stokta 10 adetten az kalan ürünleri görmek istiyor.
@@ -103,31 +98,42 @@ Order By TotalOrderForProduct desc
 
 --💰 CASE 5: Tedarikçi Başına Ortalama Sipariş Maliyeti
 --Kategori: Satın Alma / Tedarik
---Zorluk: Zor
 --Senaryo: Satın alma yöneticisi, tedarikçi başına yapılan ortalama ürün maliyetini öğrenmek istiyor.
 /*
 Görev:
-Purchasing.PurchaseOrderHeader, Purchasing.PurchaseOrderDetail, Purchasing.Vendor tablolarını kullan.
+Purchasing.PurchaseOrderHeader,
+Purchasing.PurchaseOrderDetail, 
+Purchasing.Vendor tablolarını kullan.
 Her tedarikçinin toplam sipariş tutarını ve toplam sipariş sayısını hesapla.
 Ortalama maliyeti bul (ToplamTutar / SiparişSayısı).
 */
 
 
 
+Select
+	PV.Name,
+	SUM(POD.OrderQty) As TotalOrder,
+	SUM(POH.SubTotal) As SubTotal,
+	SUM(POH.SubTotal) / SUM(POD.OrderQty) As AvaregeCost
+From 
+Purchasing.PurchaseOrderDetail POD
+Join Purchasing.PurchaseOrderHeader POH on POH.PurchaseOrderID = POD.PurchaseOrderID
+Join Purchasing.Vendor PV on PV.BusinessEntityID = POH.VendorID
+Group By PV.Name
 
---🕵️‍♂️ CASE 6: Adresi Aynı Olan Müşteriler
+--🕵 CASE 6: Adresi Aynı Olan Müşteriler
 --Kategori: Veri Kalitesi / Müşteri
---Zorluk: Zor
 --Senaryo: CRM ekibi, aynı adreste birden fazla müşterinin kayıtlı olup olmadığını analiz etmek istiyor.
---Görev:
 
---Person.Address, Sales.CustomerAddress, Sales.Customer tablolarını kullan.
+/*
+Görev:
+Person.Address, Sales.CustomerAddress, Sales.Customer tablolarını kullan.
+Aynı AddressID'ye sahip birden fazla müşteri kaydı olan adresleri getir.
+Adres bilgileri ve müşteri sayısı gösterilsin.
+*/
+--BU CASE İÇİN ASLINDA VİEWS YAZMIŞTIK KONTROL EDİLMELİ.
 
---Aynı AddressID'ye sahip birden fazla müşteri kaydı olan adresleri getir.
 
---Adres bilgileri ve müşteri sayısı gösterilsin.
-
---İstersen bu case'lerden herhangi birinin çözüm SQL sorgularını da yazabilirim ya da sana özel case'ler üretmeye devam edebilirim. Hangi alanlarla ilgileniyorsun?
 
 
 
