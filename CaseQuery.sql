@@ -216,22 +216,33 @@ Order By D.DepartmentID
 --Görev:
 
 --Sales.ShoppingCartItem tablosunu kullan.
-
 --DateCreated ve ModifiedDate sütunları arasındaki farkı gün cinsinden hesapla.
-
 --En uzun süre sepette tutulan ilk 20 ürünü göster.
+
+Select Top 20
+    SCI.ShoppingCartItemID,
+    SCI.ProductID,
+    DATEDIFF(day, SCI.DateCreated, SCI.ModifiedDate) as DaysInCart
+From Sales.ShoppingCartItem SCI
 
 --🔧 CASE 11: Ürün Güncelleme Gerekliliği Analizi
 --Kategori: Ürün Yönetimi
 --Zorluk: Orta
 --Senaryo: Ürün yönetimi, en son ne zaman güncellenmiş ürünlerin listesini almak ve yenilenmeye ihtiyaç duyanları görmek istiyor.
 --Görev:
-
 --Production.Product tablosundaki ModifiedDate alanına bak.
-
 --2 yıldan uzun süredir güncellenmeyen ürünleri listele.
-
 --Ürün adı, kategori ve güncellenmeyen gün sayısını göster.
+
+Select
+    P.Name as ProductName,
+    PC.Name as CategoryName,
+    DATEDIFF(day, P.ModifiedDate, GETDATE()) as DaysSinceLastUpdate
+From Production.Product P
+Join Production.ProductSubcategory PSC on PSC.ProductSubcategoryID = P.ProductSubcategoryID
+Join Production.ProductCategory PC on PC.ProductCategoryID = PSC.ProductCategoryID
+Where P.ModifiedDate < DATEADD(year, -2, GETDATE())
+Order By DaysSinceLastUpdate desc
 
 --🏭 CASE 12: Tedarik Zinciri Zayıflık Noktaları
 --Kategori: Tedarik Zinciri Yönetimi
@@ -239,10 +250,12 @@ Order By D.DepartmentID
 --Senaryo: Şirket, en geç teslim yapan tedarikçileri belirlemek istiyor.
 --Görev:
 
---Purchasing.PurchaseOrderHeader, Purchasing.Vendor tablolarını birleştir.
-
---OrderDate ile ShipDate arasındaki farkı hesapla.
-
---Ortalama teslim süresi en uzun olan ilk 5 tedarikçiyi sırala.
-
+Select Top 5
+    V.Name as VendorName,
+    AVG(DATEDIFF(day, POH.OrderDate, POH.ShipDate)) as AvgDeliveryDays
+From Purchasing.PurchaseOrderHeader POH
+Join Purchasing.Vendor V on V.BusinessEntityID = POH.VendorID
+Where POH.ShipDate is not null
+Group By V.Name
+Order By AvgDeliveryDays desc
 
