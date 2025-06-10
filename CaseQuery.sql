@@ -142,13 +142,22 @@ Adres bilgileri ve müşteri sayısı gösterilsin.
 --Kategori: Finans / Raporlama
 --Zorluk: Orta
 --Senaryo: Finans ekibi, 2021 ve 2022 yıllarında yapılan satışların her ay nasıl değiştiğini görmek istiyor.
+
 --Görev:
-
 --Sales.SalesOrderHeader tablosundan OrderDate ve TotalDue alanlarını kullan.
-
 --Yıla ve aya göre gruplayarak toplam satış tutarını hesapla.
-
 --Sonuçları YYYY-MM formatında sıralı olarak listele.
+
+Select
+  FORMAT(OrderDate, 'yyyy-MM') as YearMonth,
+  SUM(TotalDue) as TotalSales
+From Sales.SalesOrderHeader
+Where YEAR(OrderDate) in (2011, 2014)
+Group By FORMAT(OrderDate, 'yyyy-MM')
+Order By YearMonth
+
+
+
 
 --🚚 CASE 8: Geciken Siparişlerin Listesi
 --Kategori: Lojistik / Operasyon
@@ -157,22 +166,48 @@ Adres bilgileri ve müşteri sayısı gösterilsin.
 --Görev:
 
 --Sales.SalesOrderHeader tablosunda ShipDate, DueDate, Status gibi alanları incele.
-
 --Teslim tarihi (DueDate) geçmiş, fakat ShipDate null olan siparişleri getir.
-
 --Sipariş numarası, müşteri bilgisi ve gecikme süresini (bugün - DueDate) hesapla.
+
+
+Select
+    SOH.SalesOrderID,
+    SOH.CustomerID,
+    SOH.DueDate,
+    DATEDIFF(day, SOH.DueDate, GETDATE()) as DelayDays
+From Sales.SalesOrderHeader SOH
+Where
+    SOH.DueDate < GETDATE()
+    and SOH.ShipDate is null
+Order By DelayDays desc
+
+
 
 --🧾 CASE 9: Çalışan Maaş Analizi (Confidential)
 --Kategori: İnsan Kaynakları / Finans
 --Zorluk: Orta
 --Senaryo: İK ve Finans ekipleri, her departmandaki ortalama maaş farklarını incelemek istiyor.
 --Görev:
-
 --HumanResources.EmployeePayHistory, HumanResources.EmployeeDepartmentHistory, HumanResources.Department tablolarını birleştir.
-
 --Her departmandaki ortalama maaşı hesapla.
-
 --En güncel maaş bilgilerini al (EmployeePayHistory'deki son tarih).
+
+Select D.DepartmentID,
+       D.Name        as DepartmentName,
+       AVG(EPH.Rate) as AverageSalary
+From HumanResources.EmployeePayHistory EPH
+         Join HumanResources.EmployeeDepartmentHistory EDH
+              on EPH.BusinessEntityID = EDH.BusinessEntityID
+                  and EDH.EndDate is null
+         Join HumanResources.Department D
+              on D.DepartmentID = EDH.DepartmentID
+Where EPH.RateChangeDate = (Select MAX(RateChangeDate)
+                            From HumanResources.EmployeePayHistory EPH2
+                            Where EPH2.BusinessEntityID = EPH.BusinessEntityID)
+Group By D.DepartmentID, D.Name
+Order By D.DepartmentID
+
+
 
 --🛒 CASE 10: Sepette Ürün Kalma Süresi
 --Kategori: Müşteri Davranışı / Satış
@@ -209,3 +244,5 @@ Adres bilgileri ve müşteri sayısı gösterilsin.
 --OrderDate ile ShipDate arasındaki farkı hesapla.
 
 --Ortalama teslim süresi en uzun olan ilk 5 tedarikçiyi sırala.
+
+
